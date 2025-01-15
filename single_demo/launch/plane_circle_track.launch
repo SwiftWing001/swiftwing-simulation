@@ -1,0 +1,6 @@
+<launch>
+	<group>
+		<node name="single_plane" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+		<node name="cmd_node" pkg="single_demo" type="circle_track.py" output="screen"/>
+	</group>
+</launch>

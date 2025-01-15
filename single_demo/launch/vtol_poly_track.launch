@@ -1,0 +1,14 @@
+<launch>
+	<arg name="uav_id" default="0"/>
+	<arg name="uav_amount" default="1"/>
+	<arg name="uav_type" default="standard_vtol"/>
+
+	<group ns="uav_$(arg uav_id)">
+		<param name="uav_type" value="$(arg uav_type)"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="get_pose$(arg uav_id)" pkg="uav_controller" type="get_local_pose.py" output="screen"/>
+		<node name="vtol_control$(arg uav_id)" pkg="uav_controller" type="vector_vtol.py" output="screen"/>
+		<node name="cmd_node" pkg="single_demo" type="poly_track.py" output="screen"/>
+	</group>
+</launch>
