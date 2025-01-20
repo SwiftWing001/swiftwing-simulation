@@ -57,10 +57,13 @@ while not rospy.is_shutdown():
         print('roll_sp, -pitch_sp, yaw_sp',roll_sp, -pitch_sp, yaw_sp)
         plane.MotionControl("att", [roll_sp, -pitch_sp, yaw_sp], control_force=force)
 
-    if plane.state.mode == "AUTO.LOITER":
-        print("loitering---")
+    # if plane.state.mode == "AUTO.LOITER":
+    #     print("loitering---")
+    #     plane.set_offboard()
+    #     rospy.loginfo(plane.state.mode)
+
+    if plane.state.mode != "OFFBOARD":
         plane.set_offboard()
-        rospy.loginfo(plane.state.mode)
 
     if plane.state.mode == "OFFBOARD":
         print('OFFBOARD flying')

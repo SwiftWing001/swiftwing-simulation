@@ -8,11 +8,11 @@ from rospkg import RosPack
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float64
 a = RosPack()
-path_now = a.get_path("leader_follower_vtol") + "/scripts"
+path_now = a.get_path("multi_demo") + "/scripts"
 sys.path.append(path_now)
 sys.path.append(path_now + "/swarm_lf")
-from PathFollow import PathFollow
-from DesirePath import DesirePath
+from swarm_lf.PathFollow import PathFollow
+from swarm_lf.DesirePath import DesirePath
 path_now = a.get_path("uav_controller") + "/scripts/uav_model_lib"
 sys.path.append(path_now)
 from spawn_uav import uav

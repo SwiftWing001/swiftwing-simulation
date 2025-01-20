@@ -4,7 +4,7 @@
 	<group ns="follower_$(arg uav_id)">
 		<param name="uav_id" value="$(arg uav_id)"/>
 		<param name="uav_amount" value="$(arg uav_amount)"/>
-		<node name="follower" pkg="leader_follower_vtol" type="follower_uav.py" output="screen"/>
+		<node name="follower" pkg="multi_demo" type="follower_uav.py" output="screen"/>
 		<node name="vtol_control$(arg uav_id)" pkg="uav_controller" type="vector_vtol.py" output="screen"/>
 	</group>
 </launch>
