@@ -1,13 +1,9 @@
 <launch>
 	<arg name="amount" value="6"/>
 
-	<include file="$(find uav_controller)/launch/get_local_pose.launch">
-		<arg name="uav_type" value="standard_vtol"/>
-		<arg name="uav_amount" value="$(arg amount)"/>
-	</include>
-
 	<include file="$(find multi_demo)/launch/leader.launch">
 		<arg name="uav_id" value="0"/>
+		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 	
 	<include file="$(find multi_demo)/launch/single_follower.launch">
