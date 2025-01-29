@@ -49,8 +49,10 @@ class Follower:
             desire_v = np.copy(leader_v)
         else:
             omega = np.array([0., 0., np.linalg.norm(leader_v) / leader_r])
-            v = np.array([leader_v[0], leader_v[1], 0.])
-            v_add = np.cross(omega, v)
+            # v = np.array([leader_v[0], leader_v[1], 0.])
+            offset_o = trans_m @ self.offset
+            offset_o = np.array([offset_o[0], offset_o[1], 0.])
+            v_add = np.cross(omega, offset_o)
             desire_v = leader_v + v_add[[0, 1]]
             # print("leader_v: ", leader_v)
             # print("add_v: ", v_add)
