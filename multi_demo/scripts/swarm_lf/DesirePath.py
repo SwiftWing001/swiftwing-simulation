@@ -115,7 +115,7 @@ class DesirePath:
 
 def LineTest():
     # ===测试文件===
-    points = np.array([[1., 2.], [10., 4.], [-3., 4.], [4., 12.]])
+    points = np.array([[1., 2.], [10., 4.], [-3., 4.], [4., 12.]]) * 20
     desire_v = 12.
     path = DesirePath(points, desire_v)
     uav_p = np.array([12., 12.])
