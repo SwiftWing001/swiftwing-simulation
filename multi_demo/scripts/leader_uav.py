@@ -40,15 +40,6 @@ class LeaderUAV(PathFollow):
         pitch = np.arctan2(d_h, np.linalg.norm(desire_v))
         return pitch
 
-    def DesireVec(self, self_p, desire_h):
-        # 输入自身位置和期望高度，计算期望速度方向
-        u = self.Acal()
-        a, phi = self.AngleCal(u)
-        _, _, desire_v, _ = self.path.NearestP(self.pose[[0, 1]])
-        psi = np.arctan2(desire_v[1], desire_v[0])
-        self.desire_roll_pub.publish(Float64(phi))
-        
-
     def StatusUpdate(self, self_p, self_v):
         self.pose = np.copy(self_p)
         self.vel = np.copy(self_v)
