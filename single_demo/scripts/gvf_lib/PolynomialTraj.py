@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import numpy as np
 from Polynomial import Polynomial3Order
 from scipy import integrate

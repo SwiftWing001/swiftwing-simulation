@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from math import isnan
 from matplotlib.cbook import flatten
 import numpy as np

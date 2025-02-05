@@ -1,46 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import numpy as np
-import copy
 import time
 import os
 import sys
-import tf
-
 from geographiclib.geodesic import Geodesic
 from tf.transformations import euler_from_quaternion, quaternion_matrix
 from sensor_msgs.msg import NavSatFix
-# from std_msgs.msg import Float64MultiArray
-from std_msgs.msg import String
-from std_msgs.msg import Header
 from std_msgs.msg import Float64MultiArray
-from geometry_msgs.msg import PoseStamped, Vector3, TwistStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, Vector3, TwistStamped
 from mavros_msgs.msg import PositionTarget
-from mavros_msgs.msg import State
+from mavros_msgs.msg import State, AttitudeTarget
 from mavros_msgs.msg import AttitudeTarget
-# from mavros_msgs.msg import ExtendedState
-from mavros_msgs.srv import CommandBool, CommandTOL
-from mavros_msgs.srv import SetMode
+from mavros_msgs.srv import CommandBool, CommandTOL, SetMode
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
 
-
-# from rospkg import RosPack
-# a = RosPack()
-# path_now = a.get_path("vtol_control") + "/script"
-# sys.path.append(path_now)
-# sys.path.append(path_now + "/uav_model_lib")
 dir_mytest = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 dir_mylib = dir_mytest + "/script/uav_model_lib"
 sys.path.insert(0, dir_mylib)
 print(dir_mylib)
 
-
-# from gvf_circle import circle 
-# from gvf_lissajous import Path, GVF
 from myPID import PID
 from useful_function import Eular2Quater
-from math import pi
 
 class uav():
     def __init__(self, type = "plane", uav_index=0):
@@ -68,21 +50,7 @@ class uav():
         self.mavros_subscriber()
         self.mavros_client()
         self.mavros_publisher()
-
         self.control_mode = "none"
-
-    # def __del__(self):
-    #     self.local_pose_sub.unregister()
-    #     self.global_pose_sub.unregister()
-    #     self.local_vel_sub.unregister()
-    #     self.global_vel_sub.unregister()
-    #     self.body_vel_sub.unregister()
-    #     self.acc_sub.unregister()
-    #     self.uav_state_sub.unregister()
-    #     self.motivation_pub.unregister()
-    #     self.arm_client.close()
-    #     self.set_mode_client.close()
-    #     rospy.loginfo("uav " + str(self.index) + " delete success")
 
     def mavros_subscriber(self):
         self.local_pose_sub = rospy.Subscriber(
