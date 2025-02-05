@@ -60,7 +60,7 @@ class DesirePath:
             unit_1 /= np.linalg.norm(unit_1)
             # min_p = self.points[min_index, :] + unit * add_len
             min_p = self.points[min_index, :] - unit_0 * self.advance_len + (unit_0 + unit_1) * add_len
-            print("in  ", "dis: ", dis, "   add_len: ", add_len, "   min_index: ", min_index)
+            # print("in  ", "dis: ", dis, "   add_len: ", add_len, "   min_index: ", min_index)
 
         # 计算期望速度
         vec = self.points[min_index + 1, :] - self.points[min_index, :]
