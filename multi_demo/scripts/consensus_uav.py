@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     # 轨迹实例化
     points = np.array([[0., 0.], [1000., 0.], [1000., 1000.], [0., 1000.], [0., 0.]]) # 定义飞行轨迹
-    desire_v = 18. # 定义巡航速度
+    desire_v = 20. # 定义巡航速度
     path = DesirePath(points, desire_v)
 
     # 定义编队
@@ -132,6 +132,6 @@ if __name__ == "__main__":
         consensus_uav.StatusUpdate(uav_handle.gazebo_pose, uav_handle.global_vel)
         yaw, roll, a = consensus_uav.OriCal()
         desire_d_h = (fly_height - consensus_uav.pose[2]) * 0.4
-        pitch = np.arcsin(desire_d_h / (uav_handle.global_vel[0]**2 + uav_handle.global_vel[1]**2 + desire_d_h**2)**2)
+        pitch = np.arcsin(desire_d_h / (uav_handle.global_vel[0]**2 + uav_handle.global_vel[1]**2 + desire_d_h**2)**0.5)
         uav_handle.control_send([roll, pitch, yaw, a], "att")
         time.sleep(0.1)

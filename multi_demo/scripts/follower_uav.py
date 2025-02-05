@@ -114,7 +114,7 @@ if __name__ == "__main__":
         desire_d_h = (formation_threshold - follow_uav.pose[2]) * 0.4
         yaw, roll, a = follow_uav.OriCal()
             
-        pitch = np.arcsin(desire_d_h / (uav_handle.global_vel[0]**2 + uav_handle.global_vel[1]**2 + desire_d_h**2)**2)
+        pitch = np.arcsin(desire_d_h / (uav_handle.global_vel[0]**2 + uav_handle.global_vel[1]**2 + desire_d_h**2)**0.5)
         uav_handle.control_send([roll, pitch, yaw, a], "att")
         time.sleep(0.05)
 
