@@ -111,8 +111,8 @@ if __name__ == "__main__":
                 rospy.loginfo("uav " + str(uav_id) + " mode doesn't change")
 
             desire_pose = control_uav.pose[:]
-            desire_pose[0] = control_uav.pose[0] + control_uav.avoid[0] + 1000
-            desire_pose[1] = control_uav.pose[1] + control_uav.avoid[1] 
+            desire_pose[0] = control_uav.pose[0] + 1000 + control_uav.avoid[0]
+            desire_pose[1] = control_uav.pose[1] + control_uav.avoid[1]
             desire_pose[2] = formation_threshold + control_uav.avoid[2]
             
             control_uav.MotionControl("pos", desire_pose, 0.8)

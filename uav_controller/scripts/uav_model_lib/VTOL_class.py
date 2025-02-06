@@ -407,11 +407,9 @@ class VectorControlVtol(uav_vtol):
         )
     
     def tecsControl(self, a, desire_v, roll, dt):
-        # input: ax d_h
-        # output: force pitch
         g = 9.81
         [u, v, w] = self.velocity
-        [ve, vn, vu] = self.global_vel
+        [ve, vn, vd] = self.global_vel
         [ax, ay, az] = self.acc
         v_horizontal = np.sqrt(ve**2+vn**2)
         desire_d_h = desire_v[2]
