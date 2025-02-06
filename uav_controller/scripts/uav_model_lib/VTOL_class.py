@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 import rospy
 import numpy as np
+import os
+import sys
+import time
 from std_msgs.msg import String
 from std_msgs.msg import Header
 from std_msgs.msg import Float64MultiArray
@@ -12,30 +15,16 @@ from mavros_msgs.msg import ExtendedState
 from mavros_msgs.srv import CommandBool
 from mavros_msgs.srv import SetMode
 from mavros_msgs.srv import CommandVtolTransition
-
+from tf.transformations import euler_from_quaternion, quaternion_matrix
 from nav_msgs.msg import Odometry
-
 from sensor_msgs.msg import Imu
+from myPID import PID
+from useful_function import Orien2Eular, Velocity2Force, Eular2Quater
 
-import os
-import sys
-
-# from rospkg import RosPack
-# a = RosPack()
-# path_now = a.get_path("vtol_control") + "/script"
-# sys.path.append(path_now)
-# sys.path.append(path_now + "/uav_model_lib")
 dir_mytest = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 dir_mylib = dir_mytest + "/uav_swarm_lib"
 sys.path.insert(0, dir_mylib)
 print(dir_mylib)
-
-from myPID import PID
-from useful_function import Orien2Eular, Velocity2Force, Eular2Quater
-
-import time
-
-from math import sin, cos, pi, atan2, atan, acos, asin
 
 
 class uav_vtol(object):
@@ -50,23 +39,16 @@ class uav_vtol(object):
         # self.mode = uav_state.land_origin
         self.mode = "Init"
         self.avoid = [0.0, 0.0, 0.0]
-
         self.pose = [0.0, 0.0, 0.0]           # [x,y,z]
         self.velocity = [0.0, 0.0, 0.0]       # [x,y,z]
         self.orientation = [0.0, 0.0, 0.0]    # [x,y,z,w]
-        self.mavros_link()
+        self.mavros_subscriber()
+        self.mavros_client()
+        self.mavros_publisher()
         self.force = 0.8
-        
-        self.vel_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/local_position/velocity_local",
-            TwistStamped,
-            self.vel_CB,
-            queue_size=2,
-        )
-
         self.before_time = time.time()
         self.time_now = time.time()
-
+        self.fly_mode = "drone"
         rospy.loginfo("uav " + str(self.index) + " init success")
 
     def __del__(self):
@@ -99,33 +81,106 @@ class uav_vtol(object):
             data.pose.orientation.w,
         ]
 
-    ####################
-    ### NED Velocity
+
+    def mavros_subscriber(self):
+        self.vel_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/local_position/velocity_local",
+            TwistStamped,
+            self.vel_CB,
+            queue_size=2,
+        )
+        self.local_pose_sub = rospy.Subscriber(
+            self.topic_form + "/vision_pose/pose", 
+            PoseStamped, 
+            self.LocalPoseCB
+        )
+        self.uav_state_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/state", 
+            State, 
+            self.StateCB
+        )
+        self.fly_state_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/extended_state",
+            ExtendedState,
+            self.FlyStateCB,
+            queue_size=1,
+        )
+        self.global_vel_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/global_position/local",
+            Odometry,
+            self.globalVelCB,
+        )
+        self.acc_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/imu/data", Imu, self.accCB
+        )
+        self.velocity_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/local_position/velocity_body",
+            TwistStamped,
+            self.bodyVelCB,
+        )
+
+    def mavros_publisher(self):
+        self.drone_pub = rospy.Publisher(
+            self.topic_form + "/mavros/setpoint_raw/local",
+            PositionTarget,
+            queue_size=10,
+        )
+        self.plane_att_pub = rospy.Publisher(
+            self.topic_form + "/mavros/setpoint_raw/attitude",
+            AttitudeTarget,
+            queue_size=10,
+        )
+        self.plane_pos_pub = rospy.Publisher(
+            self.topic_form + "/mavros/setpoint_position/local",
+            PoseStamped,
+            queue_size=2,
+        )
+    def mavros_client(self):
+        rospy.loginfo("waiting for service arming...")
+        rospy.wait_for_service(self.topic_form + "/mavros/cmd/arming")
+        self.arm_client = rospy.ServiceProxy(
+            self.topic_form + "/mavros/cmd/arming", CommandBool
+        )
+        rospy.loginfo("waiting for service set_mode...")
+        rospy.wait_for_service(self.topic_form + "/mavros/set_mode")
+        self.set_mode_client = rospy.ServiceProxy(
+            self.topic_form + "/mavros/set_mode", SetMode
+        )
+        rospy.loginfo("waiting for service vtol_transition...")
+        rospy.wait_for_service(self.topic_form + "/mavros/cmd/vtol_transition")
+        self.vtol_trans_client = rospy.ServiceProxy(
+            self.topic_form + "/mavros/cmd/vtol_transition", CommandVtolTransition
+        )
+
     def globalVelCB(self, data):
-        # print('------------------------in the globalVelCB')
+        """Callback function to update global velocity in END coordinates."""
         self.global_vel = [
             data.twist.twist.linear.x,
             data.twist.twist.linear.y,
             data.twist.twist.linear.z,
         ]
 
-    ### ax ay az
     def accCB(self, data):
-        # print('acccb')
+        """Callback function to update acceleration values."""
+        """body_acc(back, right, down); global_acc(east, north, up);"""
         self.acc = [
             data.linear_acceleration.x,
             data.linear_acceleration.y,
             data.linear_acceleration.z,
         ]
+        body_acc = np.copy(self.acc)
+        q = self.orientation
+        rot = quaternion_matrix(q)[:3,:3]
+        self.global_acc = np.dot(rot,body_acc)
+        self.global_acc[-1] = self.global_acc[-1] - 9.81
 
-    ### u v w
     def bodyVelCB(self, data):
-        self.body_vel = [data.twist.linear.x, data.twist.linear.y, data.twist.linear.z]
-
-    ####################
-
-    def StateCB(self, data):
-        self.armed = data.armed
+        """Callback function to update body velocity(front, left, up)."""
+        self.body_vel = [
+            data.twist.linear.x, 
+            data.twist.linear.y, 
+            data.twist.linear.z
+        ]
 
     def StateCB(self, data):
         self.armed = data.armed
@@ -143,75 +198,6 @@ class uav_vtol(object):
             self.fly_mode = "drone2plane"
         else:
             rospy.logerr("uav " + str(self.index) + " fly mode wrong!")
-
-    def mavros_link(self):
-        self.fly_mode = "drone"
-        # self.topic_form = "/"+self.type+str(self.index)
-        # self.local_pose_sub = rospy.Subscriber(self.topic_form+"/mavros/local_position/pose", \
-        #     PoseStamped, self.LocalPoseCB)
-        self.local_pose_sub = rospy.Subscriber(
-            self.topic_form + "/vision_pose/pose", PoseStamped, self.LocalPoseCB
-        )
-        self.uav_state_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/state", State, self.StateCB
-        )
-        self.fly_state_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/extended_state",
-            ExtendedState,
-            self.FlyStateCB,
-            queue_size=1,
-        )
-        self.drone_pub = rospy.Publisher(
-            self.topic_form + "/mavros/setpoint_raw/local",
-            PositionTarget,
-            queue_size=10,
-        )
-        self.plane_att_pub = rospy.Publisher(
-            self.topic_form + "/mavros/setpoint_raw/attitude",
-            AttitudeTarget,
-            queue_size=10,
-        )
-        self.plane_pos_pub = rospy.Publisher(
-            self.topic_form + "/mavros/setpoint_position/local",
-            PoseStamped,
-            queue_size=2,
-        )
-
-        ###################
-        self.global_vel_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/global_position/local",
-            Odometry,
-            self.globalVelCB,
-        )
-        self.acc_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/imu/data", Imu, self.accCB
-        )
-        self.velocity_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/local_position/velocity_body",
-            TwistStamped,
-            self.bodyVelCB,
-        )
-        ###################
-        # print(self.topic_form+"/mavros/global_position/local--------------------------")
-
-        # clients
-        rospy.loginfo("waiting for service arming...")
-        rospy.wait_for_service(self.topic_form + "/mavros/cmd/arming")
-        self.arm_client = rospy.ServiceProxy(
-            self.topic_form + "/mavros/cmd/arming", CommandBool
-        )
-
-        rospy.loginfo("waiting for service set_mode...")
-        rospy.wait_for_service(self.topic_form + "/mavros/set_mode")
-        self.set_mode_client = rospy.ServiceProxy(
-            self.topic_form + "/mavros/set_mode", SetMode
-        )
-
-        rospy.loginfo("waiting for service vtol_transition...")
-        rospy.wait_for_service(self.topic_form + "/mavros/cmd/vtol_transition")
-        self.vtol_trans_client = rospy.ServiceProxy(
-            self.topic_form + "/mavros/cmd/vtol_transition", CommandVtolTransition
-        )
 
     def ModeSet(self, mode):
         try:
@@ -419,7 +405,7 @@ class VectorControlVtol(uav_vtol):
             status_max=1.,
             status_min=-1,
         )
-
+    
     def tecsControl(self, a, desire_v, roll, dt):
         # input: ax d_h
         # output: force pitch
