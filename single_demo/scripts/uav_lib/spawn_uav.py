@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import numpy as np
 from tf.transformations import quaternion_matrix
@@ -20,10 +20,7 @@ class uav():
             self.topic_form = ""
         self.armed = False
         self.state = State()
-
-        # self.mode = "Init"
         self.avoid = [0.0, 0.0, 0.0]
-
         self.body_acc = [0.1, 0.1, 0.1]
         self.global_acc = [0.1, 0.1, 0.1]
         self.local_pose = [0.1, 0.1, 0.1]
@@ -34,7 +31,6 @@ class uav():
         self.body_vel = [0.1, 0.1, 0.1] 
         self.orientation = [0.1, 0.1, 0.1, 0.1]  
         self.gazebo_orientation = [0.1, 0.1, 0.1, 0.1]
-        # self.time_now = time.time()  
         self.mavros_subscriber()
         self.mavros_publisher()
 
