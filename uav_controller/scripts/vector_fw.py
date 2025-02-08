@@ -28,7 +28,6 @@ plane.pitch_h_pid.kd = 0.0
 
 t_before = time.time()
 control_vector = Vector3()
-rospy.Subscriber
 
 while not rospy.is_shutdown():
     rospy.loginfo(plane.state.mode)
