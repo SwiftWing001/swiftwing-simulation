@@ -238,7 +238,7 @@ class uav():
         )
 
         if response.success:
-            rospy.loginfo("Takeoff initiated to target position: 30 meters forward.")
+            rospy.loginfo("Takeoff initiated to target position: 100 meters forward.")
             # 调用解锁服务
             self.arming(True)
         else:

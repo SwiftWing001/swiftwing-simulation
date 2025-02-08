@@ -18,7 +18,7 @@ file_name = os.path.basename(__file__)
 print(file_name) 
 rospy.init_node(file_name)
 plane = VectorControlPlane()
-plane.psi_pid.kd = 2.5
+plane.psi_pid.kp = 2.5
 plane.psi_pid.ki = 0.1
 plane.psi_pid.kd = 0.0
 
