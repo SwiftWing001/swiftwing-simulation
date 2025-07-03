@@ -1,0 +1,83 @@
+#
+# PX4 ROS sitl envvironment: Python3 + ROS Noetic + Gazebo + PX4 v1.15.0
+#
+
+FROM px4io/px4-dev-simulation-focal:2024-05-18
+LABEL maintainer="SwiftWing<swiftwing001@outlook.com>"
+
+ENV HTTPS_PROXY=http://127.0.0.1:8889
+ENV HTTPS_PROXY=http://127.0.0.1:8889
+
+ENV ROS_DISTRO=noetic
+
+# setup ros keys
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list' \
+	&& sh -c 'echo "deb http://packages.ros.org/ros/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-latest.list' \
+	&& sh -c 'echo "deb http://packages.ros.org/ros-shadow-fixed/ubuntu `lsb_release -sc` main" > /etc/apt/sources.list.d/ros-shadow.list' \
+	&& apt-get update --fix-missing \
+	&& apt-get -y --quiet --no-install-recommends install --fix-missing \
+		geographiclib-tools \
+		libeigen3-dev \
+		libgeographic-dev \
+		libopencv-dev \
+		libyaml-cpp-dev \
+		python3-rosdep \
+		python3-catkin-tools \
+		python3-catkin-lint \
+		ros-$ROS_DISTRO-gazebo-ros-pkgs \
+		ros-$ROS_DISTRO-mavlink \
+		ros-$ROS_DISTRO-mavros \
+		ros-$ROS_DISTRO-mavros-extras \
+		ros-$ROS_DISTRO-octomap \
+		ros-$ROS_DISTRO-octomap-msgs \
+		ros-$ROS_DISTRO-pcl-conversions \
+		ros-$ROS_DISTRO-pcl-msgs \
+		ros-$ROS_DISTRO-pcl-ros \
+		ros-$ROS_DISTRO-ros-base \
+		ros-$ROS_DISTRO-rostest \
+		ros-$ROS_DISTRO-rosunit \
+		xvfb \
+	&& geographiclib-get-geoids egm96-5 \
+	&& apt-get -y autoremove \
+	&& apt-get clean autoclean \
+	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+
+# bootstrap rosdep
+
+RUN apt-get install python3-pip -y
+RUN pip3 install rosdepc
+RUN rosdepc init && rosdepc update
+RUN echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+
+# Install cmake
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.16.0/cmake-3.16.0-Linux-x86_64.sh
+RUN mkdir /opt/cmake
+RUN sh /cmake-3.16.0-Linux-x86_64.sh --prefix=/opt/cmake --skip-license
+RUN ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+RUN cmake --version
+
+# PX4 
+WORKDIR /workspace
+RUN git clone https://github.com/PX4/PX4-Autopilot.git -b v1.15.0 --recursive \
+    && cd PX4-Autopilot \
+    && git submodule update --init --recursive
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install --upgrade Pillow
+COPY files/requirements.txt ./PX4-Autopilot/Tools/setup/requirements.txt
+RUN bash ./PX4-Autopilot/Tools/setup/ubuntu.sh --fix-missing
+
+
+WORKDIR /workspace
+RUN apt-get install -y ros-${ROS_DISTRO}-mavros ros-${ROS_DISTRO}-mavros-extras && \
+    cd ../.. && \
+    cd /opt/ros/noetic/lib/mavros && \
+    bash install_geographiclib_datasets.sh
+RUN /bin/bash -c "source /opt/ros/noetic/setup.bash && mkdir -p /workspace/swiftwing/src && cd /workspace/swiftwing/ && catkin_make"
+RUN echo "source /workspace/swiftwing/devel/setup.bash" >> ~/.bashrc
+RUN echo "source /workspace/PX4-Autopilot/Tools/simulation/gazebo-classic/setup_gazebo.bash /workspace/PX4-Autopilot/ /workspace/PX4-Autopilot/build/px4_sitl_default" >> ~/.bashrc
+RUN echo "export ROS_PACKAGE_PATH=\$ROS_PACKAGE_PATH:/workspace/PX4-Autopilot/" >> ~/.bashrc
+RUN echo "export ROS_PACKAGE_PATH=\$ROS_PACKAGE_PATH:/workspace/PX4-Autopilot/Tools/simulation/gazebo-classic/sitl_gazebo-classic" >> ~/.bashrc
+
