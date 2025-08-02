@@ -132,6 +132,8 @@ if __name__ == "__main__":
         consensus_uav.StatusUpdate(uav_handle.gazebo_pose, uav_handle.global_vel)
         yaw, roll, a = consensus_uav.OriCal()
         desire_d_h = (fly_height - consensus_uav.pose[2]) * 0.4
+        if abs(desire_d_h) > 1.:
+            desire_d_h = np.sign(desire_d_h) * 1.
         pitch = np.arcsin(desire_d_h / (uav_handle.global_vel[0]**2 + uav_handle.global_vel[1]**2 + desire_d_h**2)**0.5)
         uav_handle.control_send([roll, pitch, yaw, a], "att")
         time.sleep(0.1)

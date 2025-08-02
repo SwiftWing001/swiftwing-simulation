@@ -1,0 +1,55 @@
+<launch>
+	<arg name="uav_amount" value="6"/>
+	<arg name="uav_type" default="plane"/>
+	<param name="uav_amount" value="$(arg uav_amount)"/>
+	<param name="uav_type" value="$(arg uav_type)"/>
+	<node name="get_pose" pkg="uav_controller" type="get_local_pose.py" output="screen"/>
+	
+	<group ns="uav0">
+		<arg name="uav_id" value="0"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+	
+	<group ns="uav1">
+		<arg name="uav_id" value="1"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+	
+	<group ns="uav2">
+		<arg name="uav_id" value="2"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+	
+	<group ns="uav3">
+		<arg name="uav_id" value="3"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+	
+	<group ns="uav4">
+		<arg name="uav_id" value="4"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+	
+	<group ns="uav5">
+		<arg name="uav_id" value="5"/>
+		<param name="uav_id" value="$(arg uav_id)"/>
+		<param name="uav_amount" value="$(arg uav_amount)"/>
+		<node name="consensus_$(arg uav_id)" pkg="multi_demo" type="consensus_uav.py" output="screen"/>
+		<node name="plane_control$(arg uav_id)" pkg="uav_controller" type="vector_fw.py" output="screen"/>
+	</group>
+</launch>

@@ -17,7 +17,16 @@ from uav_model_lib.FW_class import VectorControlPlane
 file_name = os.path.basename(__file__)
 print(file_name) 
 rospy.init_node(file_name)
-plane = VectorControlPlane()
+
+
+try:
+    uav_id = int(rospy.get_param("uav_id"))
+    print("====Start with 'uav_id'= " + str(uav_id))
+except KeyError:
+    rospy.logwarn("====Start without 'uav_id', set uav_id = None")
+    uav_id = None
+
+plane = VectorControlPlane(uav_index=uav_id)
 plane.psi_pid.kp = 2.5
 plane.psi_pid.ki = 0.1
 plane.psi_pid.kd = 0.0

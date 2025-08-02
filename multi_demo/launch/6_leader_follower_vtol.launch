@@ -1,32 +1,32 @@
 <launch>
 	<arg name="amount" value="6"/>
 
-	<include file="$(find multi_demo)/launch/leader.launch">
+	<include file="$(find multi_demo)/launch/leader_vtol.launch">
 		<arg name="uav_id" value="0"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 	
-	<include file="$(find multi_demo)/launch/single_follower.launch">
+	<include file="$(find multi_demo)/launch/single_follower_vtol.launch">
 		<arg name="uav_id" value="1"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 
-	<include file="$(find multi_demo)/launch/single_follower.launch">
+	<include file="$(find multi_demo)/launch/single_follower_vtol.launch">
 		<arg name="uav_id" value="2"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 	
-	<include file="$(find multi_demo)/launch/single_follower.launch">
+	<include file="$(find multi_demo)/launch/single_follower_vtol.launch">
 		<arg name="uav_id" value="3"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 	
-	<include file="$(find multi_demo)/launch/single_follower.launch">
+	<include file="$(find multi_demo)/launch/single_follower_vtol.launch">
 		<arg name="uav_id" value="4"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>
 	
-	<include file="$(find multi_demo)/launch/single_follower.launch">
+	<include file="$(find multi_demo)/launch/single_follower_vtol.launch">
 		<arg name="uav_id" value="5"/>
 		<arg name="uav_amount" value="$(arg amount)"/>
 	</include>

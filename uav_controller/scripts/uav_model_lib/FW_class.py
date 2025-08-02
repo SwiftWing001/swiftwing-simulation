@@ -25,11 +25,13 @@ from myPID import PID
 from useful_function import Eular2Quater
 
 class uav():
-    def __init__(self, type = "plane", uav_index=0):
+    def __init__(self, type = "plane", uav_index=None):
         self.type = type        # this str will use in publisher/subscriber establish
         self.index = uav_index  # uav's index in group, every uav has a unique one
-        self.topic_form = "/" + self.type + str(self.index)
-        self.topic_form = ""
+        if self.index == None:
+            self.topic_form = ""
+        else:
+            self.topic_form = "/" + self.type + str(self.index)
         self.armed = False
         self.state = State
 
@@ -39,9 +41,17 @@ class uav():
         self.body_acc = [0.1, 0.1, 0.1]
         self.global_acc = [0.1, 0.1, 0.1]
         self.local_pose = [0.1, 0.1, 0.1]
-        self.global_pose = [0.1, 0.1, 0.1]
+        if self.index == None:
+            self.global_pose = [0.1, 0.1, 0.1]
+        else:
+            self.global_pose = self.local_pose
+
         self.local_vel = [0.1, 0.1, 0.1]
-        self.global_vel = [0.1, 0.1, 0.1] 
+        if self.index == None:
+            self.global_vel = [0.1, 0.1, 0.1] 
+        else:
+            self.global_vel = self.local_vel
+
         self.body_vel = [0.1, 0.1, 0.1] 
         self.orientation = [0.1, 0.1, 0.1, 0.1]
         self.velocity_sp = [0.1, 0.1, 0.1, 0.1]
@@ -53,30 +63,43 @@ class uav():
         self.control_mode = "none"
 
     def mavros_subscriber(self):
-        self.local_pose_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/local_position/pose", 
-            PoseStamped, 
-            self.local_pose_cb
-        )
+        if self.index == None:
+            self.local_pose_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/local_position/pose", 
+                PoseStamped, 
+                self.local_pose_cb
+            )
+            self.global_pose_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/global_position/global",
+                NavSatFix,
+                self.global_pose_cb
+            )
 
-        self.global_pose_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/global_position/global",
-            NavSatFix,
-            self.global_pose_cb
-        )
+            self.local_vel_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/local_position/velocity_local",
+                TwistStamped,
+                self.local_vel_cb,
+                queue_size=2,
+            )
 
-        self.local_vel_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/local_position/velocity_local",
-            TwistStamped,
-            self.local_vel_cb,
-            queue_size=2,
-        )
-
-        self.global_vel_sub = rospy.Subscriber(
-            self.topic_form + "/mavros/global_position/local",
-            Odometry,
-            self.global_vel_cb,
-        )
+            self.global_vel_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/global_position/local",
+                Odometry,
+                self.global_vel_cb,
+            )
+        else:
+            self.local_pose_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/vision_pose/pose", 
+                PoseStamped, 
+                self.local_pose_cb
+            )
+            self.local_vel_sub = rospy.Subscriber(
+                self.topic_form + "/mavros/vision_speed/speed",
+                TwistStamped,
+                self.local_vel_cb,
+                queue_size=2,
+            )
+        
 
         self.body_vel_sub = rospy.Subscriber(
             self.topic_form + "/mavros/local_position/velocity_body",
@@ -335,8 +358,8 @@ class uav():
             rospy.logerr("No such control type in plane mode")
 
 class VectorControlPlane(uav):
-    def __init__(self, type = "plane", uav_index=0):
-        super().__init__(type = "plane", uav_index=0)
+    def __init__(self, type = "uav", uav_index=None):
+        super().__init__(type, uav_index)
         self.psi_pid = PID(
             0.05,
             np.pi/2.5,
