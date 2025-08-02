@@ -472,7 +472,8 @@ class VectorControlPlane(uav):
         B_ff_out = 0.4 * dot_B_sp
         self.force = E_pi_out + E_ff_out + 0.5 + 0.0*np.abs(roll)
         desire_d_h = np.clip(desire_d_h, -5., 5.)
-        pitch = np.arctan2(desire_d_h,v_horizontal) + self.pitch_h_pid.calculate(desire_d_h, vu, dt) 
+        # pitch = np.arctan2(desire_d_h,v_horizontal) + self.pitch_h_pid.calculate(desire_d_h, vu, dt)
+        pitch = 0.15*desire_d_h + self.pitch_h_pid.calculate(desire_d_h, vu, dt)
         pitch = np.clip(pitch, -np.pi/6., np.pi/6.)
 
         if self.force < 0.15 or np.isnan(self.force):
