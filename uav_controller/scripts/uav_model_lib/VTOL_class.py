@@ -216,8 +216,8 @@ class uav_vtol(object):
             return -1
 
     def FlyModeTrans(self, mode):
-        if not (self.fly_mode == "drone" and mode == "plane") or \
-            (self.fly_mode == "plane" and mode == "drone"):
+        if not ((self.fly_mode == "drone" and mode == "plane") or \
+            (self.fly_mode == "plane" and mode == "drone")):
             rospy.logwarn("Can't trans mode")
             return -1
             
