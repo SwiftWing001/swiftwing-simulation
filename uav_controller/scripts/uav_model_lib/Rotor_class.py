@@ -41,6 +41,7 @@ class uav():
         self.body_acc = [0.1, 0.1, 0.1]
         self.global_acc = [0.1, 0.1, 0.1]
         self.local_pose = [0.1, 0.1, 0.1]
+        self.gps_pose = [0.1, 0.1, 0.1] 
         if self.index == None:
             self.global_pose = [0.1, 0.1, 0.1]
         else:
@@ -64,17 +65,22 @@ class uav():
         self.control_mode = "none"
 
     def mavros_subscriber(self):
+        self.gps_pose_sub = rospy.Subscriber(
+            self.topic_form + "/mavros/global_position/global",
+            NavSatFix,
+            self.global_pose_cb
+        )
         if self.index == None:
             self.local_pose_sub = rospy.Subscriber(
                 self.topic_form + "/mavros/local_position/pose", 
                 PoseStamped, 
                 self.local_pose_cb
             )
-            self.global_pose_sub = rospy.Subscriber(
-                self.topic_form + "/mavros/global_position/global",
-                NavSatFix,
-                self.global_pose_cb
-            )
+            # self.global_pose_sub = rospy.Subscriber(
+            #     self.topic_form + "/mavros/global_position/global",
+            #     NavSatFix,
+            #     self.global_pose_cb
+            # )
 
             self.local_vel_sub = rospy.Subscriber(
                 self.topic_form + "/mavros/local_position/velocity_local",
@@ -126,11 +132,11 @@ class uav():
             self.vel_control_cb
         )
         
-        self.att_control_sub = rospy.Subscriber(
-            self.topic_form + "/control_signal/att", 
-            Float64MultiArray, 
-            self.att_control_cb
-        )
+        # self.att_control_sub = rospy.Subscriber(
+        #     self.topic_form + "/control_signal/att", 
+        #     Float64MultiArray, 
+        #     self.att_control_cb
+        # )
 
     def mavros_publisher(self):
         self.rotor_cmd_pub = rospy.Publisher(
@@ -138,6 +144,7 @@ class uav():
             PositionTarget,
             queue_size=2,
         )
+        """
         self.plane_att_pub = rospy.Publisher(
             self.topic_form + "/mavros/setpoint_raw/attitude",
             AttitudeTarget,
@@ -153,6 +160,7 @@ class uav():
             PositionTarget,
             queue_size=2,
         )
+        """
 
     def mavros_client(self):
         rospy.wait_for_service(self.topic_form + '/mavros/cmd/takeoff')
@@ -200,11 +208,17 @@ class uav():
 
     def global_pose_cb(self, data):
         """Callback function to update latitude, longitude, altitude."""
-        self.global_pose = [
+        self.gps_pose = [
             data.latitude,
             data.longitude,
             data.altitude,
         ]
+        if self.index == None:
+            self.global_pose = [
+                data.latitude,
+                data.longitude,
+                data.altitude,
+            ]
 
     def local_vel_cb(self, data):
         """Callback function to update velocity in local EDU coordinates."""
@@ -256,12 +270,13 @@ class uav():
         ]
         self.control_mode = "vel"
     
-    def att_control_cb(self, msg):
-        self.attitude_sp = msg.data[0: 4]
-        self.control_mode = "att"
+    # def att_control_cb(self, msg):
+    #     self.attitude_sp = msg.data[0: 4]
+    #     self.control_mode = "att"
 
     def takeoff(self, h=10.):
-        rospy.loginfo(self.global_pose)
+        rospy.loginfo(self.gps_pose)
+        rospy.loginfo(self.local_pose)
         rospy.loginfo(self.state)
         
         rospy.loginfo("Try to takeoff...")
@@ -276,14 +291,14 @@ class uav():
         
         # 计算高度差
         _egm96 = GeoidPGM('/usr/share/GeographicLib/geoids/egm96-5.pgm', kind=-3)
-        offset_height =  _egm96.height(self.global_pose[0], self.global_pose[1])
+        offset_height =  _egm96.height(self.gps_pose[0], self.gps_pose[1])
         
         response = self.takeoff_client(
             min_pitch=0.0,
             yaw=90.,
-            latitude=self.global_pose[0],
-            longitude=self.global_pose[1],
-            altitude=self.global_pose[2] - offset_height + h,
+            latitude=self.gps_pose[0],
+            longitude=self.gps_pose[1],
+            altitude=self.gps_pose[2] - offset_height + h,
         )
         if response.success:
             return True
@@ -338,11 +353,21 @@ class uav():
         vec = np.array(control_vector[0:3])
         if control_type == "vel" or control_type == "acc":
             vec = self.R_local2global @ vec
+
+        vec_temp = self.R_enu2ned @ np.array(self.global_vel)
         v_x = self.global_vel[0]
         v_y = self.global_vel[1]
         v_z = self.global_vel[2]
-        if np.linalg.norm([v_x, v_y, v_z]) > 0.5:
-            yaw_cmd = -np.arccos(v_x / np.sqrt(v_x**2 + v_y**2)) - np.pi / 2.
+        # v_x = vec_temp[0]
+        # v_y = vec_temp[1]
+        # v_z = vec_temp[2]
+        if np.linalg.norm([v_x, v_y, v_z]) > 0.05:
+            # yaw_cmd = -np.arccos(v_x / np.sqrt(v_x**2 + v_y**2)) - np.pi / 2.
+            # yaw_cmd = np.arccos(v_x / np.sqrt(v_x**2 + v_y**2))
+            yaw_cmd = np.arctan2(v_y, v_x) - np.pi / 2.
+            # if yaw_cmd < 0:
+            #     yaw_cmd += 2 * np.pi
+            print("v_x is: ", v_x, "yaw is: ", yaw_cmd)
         else:
             yaw_cmd = 0.
         # yaw_cmd = np.pi / 4.
