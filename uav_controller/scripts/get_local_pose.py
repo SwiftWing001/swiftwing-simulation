@@ -7,12 +7,18 @@ from gazebo_msgs.msg import ModelStates
 try:
     vehicle_type = rospy.get_param("uav_type")
 except KeyError:
-    rospy.logwarn("Start without'uav_type', set uav_type='standard_vtol'")
-    vehicle_type = "standard_vtol"
+    if len(sys.argv) >= 3:
+        vehicle_type = sys.argv[1]
+    else:
+        vehicle_type = "standard_vtol"
+    rospy.logwarn("Start without'uav_type', set uav_type=" + vehicle_type)
 try:
     vehicle_num = int(rospy.get_param("uav_amount"))
 except KeyError:
-    vehicle_num = int(sys.argv[1])
+    if len(sys.argv) >= 3:
+        vehicle_num = int(sys.argv[2])
+    else:
+        vehicle_num = 1
     rospy.logwarn("Start without 'uav_amount', set uav_amount = " + str(vehicle_num))
 multi_pose_pub = [None]*(vehicle_num)
 multi_speed_pub = [None]*vehicle_num
