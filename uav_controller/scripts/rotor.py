@@ -14,10 +14,6 @@ print(dir_mylib)
 from uav_model_lib.Rotor_class import uav
 
 
-file_name = os.path.basename(__file__)
-print(file_name) 
-rospy.init_node(file_name)
-
 
 try:
     uav_id = int(rospy.get_param("uav_id"))
@@ -28,6 +24,8 @@ except KeyError:
     else:
         uav_id = None
     rospy.logwarn("====Start without 'uav_id', set uav_id = " + str(uav_id))
+
+rospy.init_node("rotor_control_" + str(uav_id))
 
 if __name__ == "__main__":
     rotor = uav(type="uav", uav_index=uav_id)
