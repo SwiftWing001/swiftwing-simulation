@@ -140,7 +140,7 @@ class uav():
 
     def mavros_publisher(self):
         self.rotor_cmd_pub = rospy.Publisher(
-            self.topic_form + "mavros/setpoint_raw/local",
+            self.topic_form + "/mavros/setpoint_raw/local",
             PositionTarget,
             queue_size=2,
         )
