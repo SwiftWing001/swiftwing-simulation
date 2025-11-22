@@ -23,8 +23,11 @@ try:
     uav_id = int(rospy.get_param("uav_id"))
     print("====Start with 'uav_id'= " + str(uav_id))
 except KeyError:
-    rospy.logwarn("====Start without 'uav_id', set uav_id = None")
-    uav_id = None
+    if len(sys.argv) >=2:
+        uav_id = int(sys.argv[1])
+    else:
+        uav_id = None
+    rospy.logwarn("====Start without 'uav_id', set uav_id = " + str(uav_id))
 
 if __name__ == "__main__":
     rotor = uav(type="uav", uav_index=uav_id)
