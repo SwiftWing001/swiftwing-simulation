@@ -96,12 +96,12 @@ class uav():
             )
         else:
             self.local_pose_sub = rospy.Subscriber(
-                self.topic_form + "/mavros/vision_pose/pose", 
+                self.topic_form + "/vision_pose/pose", 
                 PoseStamped, 
                 self.local_pose_cb
             )
             self.local_vel_sub = rospy.Subscriber(
-                self.topic_form + "/mavros/vision_speed/speed",
+                self.topic_form + "/vision_speed/speed",
                 TwistStamped,
                 self.local_vel_cb,
                 queue_size=2,
@@ -227,6 +227,8 @@ class uav():
             data.twist.linear.y,
             data.twist.linear.z,
         ]
+        if not self.index == None:
+            self.global_vel = self.local_vel
 
     def global_vel_cb(self, data):
         """Callback function to update global velocity in END coordinates."""
