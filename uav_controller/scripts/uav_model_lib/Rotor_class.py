@@ -360,16 +360,8 @@ class uav():
         v_x = self.global_vel[0]
         v_y = self.global_vel[1]
         v_z = self.global_vel[2]
-        # v_x = vec_temp[0]
-        # v_y = vec_temp[1]
-        # v_z = vec_temp[2]
         if np.linalg.norm([v_x, v_y, v_z]) > 0.05:
-            # yaw_cmd = -np.arccos(v_x / np.sqrt(v_x**2 + v_y**2)) - np.pi / 2.
-            # yaw_cmd = np.arccos(v_x / np.sqrt(v_x**2 + v_y**2))
             yaw_cmd = np.arctan2(v_y, v_x) - np.pi / 2.
-            # if yaw_cmd < 0:
-            #     yaw_cmd += 2 * np.pi
-            print("v_x is: ", v_x, "yaw is: ", yaw_cmd)
         else:
             yaw_cmd = 0.
         # yaw_cmd = np.pi / 4.
